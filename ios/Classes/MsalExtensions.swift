@@ -5,16 +5,15 @@ import Foundation
 import MSAL
 
 extension MSALAccount {
-
-
     var dictionary: [String: Any?] {
-        return ["username": username,
-                "identifier": identifier,
-                "environment": environment,
-                "accountClaims": accountClaims,
-                "isSSOAccount": isSSOAccount
+        return [
+            "username": username,
+            "identifier": identifier,
+            "environment": environment,
+            "isSSOAccount": isSSOAccount
         ]
     }
+
     var nsDictionary: NSDictionary {
         return dictionary as NSDictionary
     }

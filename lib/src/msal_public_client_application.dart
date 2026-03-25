@@ -15,6 +15,7 @@ class MSALPublicClientApplication {
       await clientApplication._initialize(config);
       return clientApplication;
     } catch (e) {
+      print(e.toString());
       rethrow;
     }
   }
@@ -49,10 +50,15 @@ class MSALPublicClientApplication {
     try {
       final result = await _channel.invokeMethod<List>(
           'loadAccounts', enumerationParameters?.toMap());
+
+      print('loadAccounts raw result: $result');
+
       return result
           ?.map((e) => MSALAccount.fromMap(Map<String, dynamic>.from(e)))
           .toList();
     } on PlatformException catch (e) {
+      print(
+          'loadAccounts PlatformException code=${e.code} message=${e.message} details=${e.details}');
       throw _convertException(e);
     }
   }

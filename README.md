@@ -1,7 +1,10 @@
-We are looking for start ups to work with for launching our new productised IAM and user management system which greatly simplifies adding user authentication to your app and includes additional functionality for user management and analytics. To find out more or sign up please visit [https://www.joopie.co](https://www.joopie.co "Joopie") and let us know you came from this repo.
 
-## IMPORTANT ANNOUNCEMENT
-This package comes as is. Unfortunately we do not have the resources to offer free support, help, or review any PRs. Please feel free to fork or use this package in anyway you like. For paid support options please email us at info@muljin.com.
+## Version 3.1.0-alpha1 Wikilift Fork
+- Updated the plugin to work correctly on modern iOS (SceneDelegate) and Flutter 3.41.
+- Adjusted the initialization and presentation to match the current iOS lifecycle.
+- Fixed the account flow by using `allAccounts()` and persisting `currentAccount`.
+- Cleaned up the serialization to prevent errors in the channel (especially `accountClaims`).
+Plugin is once again usable on current iOS versions without breaking silent authentication.
 
 ## Version 2.0.0
 Version 2.0.0+ have moved to nullable and a non-nullable version will not be available. Please ensure all packages you use support nullable and you have updated to the latest version of stable flutter.

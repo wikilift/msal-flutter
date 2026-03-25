@@ -13,24 +13,20 @@ class MyApp extends StatefulWidget {
 }
 
 class _MyAppState extends State<MyApp> {
-  static const String _authority =
-      "https://msalfluttertest.b2clogin.com/tfp/3fab2993-1fec-4a8c-a6d8-2bfea01e64ea/B2C_1_phonesisu";
-  static const String _iosRedirectUri = "msauth.com.muljin.msalflutterv2://auth";
-  static const String _androidRedirectUri =
-      "msauth://uk.co.moodio.msal_flutter_example/TvkGQnk1ERb%2Bl9pB4OeyeWrYmqo%3D";
-  static const String _clientId = "fc6136e7-43d1-489c-b221-630e9e4402d3";
+  static const String _authority = "https://login.microsoftonline.com/common";
+  static const String _iosRedirectUri =
+      "msal701e9fb7-feb3-4832-a4d7-a706dbe54c40://auth";
+  static const String _clientId = "701e9fb7-feb3-4832-a4d7-a706dbe54c40";
   static const List<String> _scopes = [
-    "https://msalfluttertest.onmicrosoft.com/msaltesterapi/All"
+    "https://otiselevator.com/NonOtisSVTAPI-prod-ES/user_impersonation"
   ];
-  String _output = 'NONE';
+
   final config = MSALPublicClientApplicationConfig(
-    androidRedirectUri: _androidRedirectUri,
-    iosRedirectUri: _iosRedirectUri,
     clientId: _clientId,
-    androidConfig: MSALAndroidConfig(
-        authorities: [Authority(authorityUrl: Uri.parse(_authority))]),
+    iosRedirectUri: _iosRedirectUri,
     authority: Uri.parse(_authority),
   );
+  String _output = 'NONE';
 
   MSALPublicClientApplication? pca;
   List<MSALAccount>? accounts;
@@ -52,6 +48,11 @@ class _MyAppState extends State<MyApp> {
       MSALResult? resp = await pca!
           .acquireToken(MSALInteractiveTokenParameters(scopes: _scopes));
       res = resp?.account.identifier ?? 'noAuth';
+      res += "\n${resp?.account.username ?? "noName"}";
+      res += "\n${resp?.account.accountClaims ?? "noClaims"}";
+      res += "\n${resp?.authenticationScheme ?? "noAuthScheme"}";
+      res += "\n${resp?.scopes ?? "noScopes"}";
+      res += "\n${resp?.expiresOn?.toIso8601String() ?? "noExpirestime"}";
     } on MsalUserCancelledException {
       res = "User cancelled";
     } on MsalNoAccountException {
@@ -97,13 +98,12 @@ class _MyAppState extends State<MyApp> {
 
     String res = 'res';
     try {
-        final response = await pca!.acquireTokenSilent(
-            MSALSilentTokenParameters(
-              scopes: _scopes,
-            ),
-           accounts?.isEmpty==true?null: accounts?.first);
-        res = response?.account.identifier ?? '';
-
+      final response = await pca!.acquireTokenSilent(
+          MSALSilentTokenParameters(
+            scopes: _scopes,
+          ),
+          accounts?.isEmpty == true ? null : accounts?.first);
+      res = response?.account.identifier ?? '';
     } on MsalUserCancelledException {
       res = "User cancelled";
     } on MsalNoAccountException {
@@ -124,8 +124,9 @@ class _MyAppState extends State<MyApp> {
     });
   }
 
-  Future _logout() async {
+  Future<void> _logout() async {
     print("called logout");
+
     if (pca == null) {
       print("initializing pca");
       pca = await MSALPublicClientApplication.createPublicClientApplication(
@@ -133,21 +134,21 @@ class _MyAppState extends State<MyApp> {
       await pca!.initWebViewParams(MSALWebviewParameters());
     }
 
-    print("pca is not null");
     String res;
+
     try {
-      if (accounts?.isNotEmpty == true) {
-        final resp =
-            await pca!.logout(MSALSignoutParameters(), accounts!.first);
+      if (accounts?.isNotEmpty != true) {
+        res = "No hay cuentas cargadas";
+      } else {
+        await pca!.logout(MSALSignoutParameters(), accounts!.first);
+        res = "Account removed";
       }
-      res = "Account removed";
-    } on MsalException {
-      res = "Error signing out";
+    } on MsalException catch (e) {
+      res = "Error signing out: $e";
     } on PlatformException catch (e) {
-      res = "some other exception ${e.toString()}";
+      res = "PlatformException: ${e.message}";
     }
 
-    print("setting state");
     setState(() {
       _output = res;
     });

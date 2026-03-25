@@ -3,6 +3,7 @@ class MSALTenantProfile {
   String? environment;
   String? identifier;
   bool? isHomeTenantProfile;
+
   MSALTenantProfile({
     this.tenantId,
     this.environment,
@@ -12,10 +13,9 @@ class MSALTenantProfile {
 
   MSALTenantProfile.fromMap(Map<String, dynamic> map)
       : this(
-          tenantId: map['tenantId'],
-          environment: map['environment'],
-          identifier: map['identifier'],
-          isHomeTenantProfile: map['isHomeTenantProfile'],
+          tenantId: map['tenantId'] as String?,
+          environment: map['environment'] as String?,
+          identifier: map['identifier'] as String?,
+          isHomeTenantProfile: map['isHomeTenantProfile'] as bool?,
         );
 }
-

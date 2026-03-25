@@ -1,4 +1,3 @@
-
 import 'package:msal_flutter/src/utility/extensions/map_cleanup_extension.dart';
 
 class MSALAccount {
@@ -7,6 +6,7 @@ class MSALAccount {
   String? environment;
   Map<String, dynamic>? accountClaims;
   bool isSSOAccount;
+
   MSALAccount({
     required this.identifier,
     this.isSSOAccount = false,
@@ -27,10 +27,12 @@ class MSALAccount {
 
   MSALAccount.fromMap(Map<String, dynamic> map)
       : this(
-          username: map['username'],
-          identifier: map['identifier'] ?? '',
-          environment: map['environment'],
-          accountClaims: Map<String, dynamic>.from(map['accountClaims']),
-          isSSOAccount: map['isSSOAccount'] ?? false,
+          username: map['username'] as String?,
+          identifier: map['identifier'] as String? ?? '',
+          environment: map['environment'] as String?,
+          accountClaims: map['accountClaims'] == null
+              ? null
+              : Map<String, dynamic>.from(map['accountClaims'] as Map),
+          isSSOAccount: map['isSSOAccount'] as bool? ?? false,
         );
 }
