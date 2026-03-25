@@ -14,12 +14,9 @@ class MyApp extends StatefulWidget {
 
 class _MyAppState extends State<MyApp> {
   static const String _authority = "https://login.microsoftonline.com/common";
-  static const String _iosRedirectUri =
-      "msal701e9fb7-feb3-4832-a4d7-a706dbe54c40://auth";
-  static const String _clientId = "701e9fb7-feb3-4832-a4d7-a706dbe54c40";
-  static const List<String> _scopes = [
-    "https://otiselevator.com/NonOtisSVTAPI-prod-ES/user_impersonation"
-  ];
+  static const String _iosRedirectUri = "your_msl_redirect_uri";
+  static const String _clientId = "your_client_id";
+  static const List<String> _scopes = ["your_scopes"];
 
   final config = MSALPublicClientApplicationConfig(
     clientId: _clientId,
