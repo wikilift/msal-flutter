@@ -1,3 +1,4 @@
+import 'dart:developer';
 import 'dart:io';
 
 import 'package:flutter/services.dart';
@@ -15,7 +16,7 @@ class MSALPublicClientApplication {
       await clientApplication._initialize(config);
       return clientApplication;
     } catch (e) {
-      print(e.toString());
+      log(e.toString());
       rethrow;
     }
   }
@@ -51,14 +52,11 @@ class MSALPublicClientApplication {
       final result = await _channel.invokeMethod<List>(
           'loadAccounts', enumerationParameters?.toMap());
 
-      print('loadAccounts raw result: $result');
-
       return result
           ?.map((e) => MSALAccount.fromMap(Map<String, dynamic>.from(e)))
           .toList();
     } on PlatformException catch (e) {
-      print(
-          'loadAccounts PlatformException code=${e.code} message=${e.message} details=${e.details}');
+      log('loadAccounts PlatformException code=${e.code} message=${e.message} details=${e.details}');
       throw _convertException(e);
     }
   }

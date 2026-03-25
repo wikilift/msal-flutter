@@ -77,16 +77,16 @@ class PublicClientApplication {
       final String token = await _channel.invokeMethod('acquireToken', res);
       return token;
     } on PlatformException catch (e) {
-      print(e.toString());
+      log(e.toString());
       throw _convertException(e);
     } catch (e) {
-      print(e);
+      log(e.toString());
       rethrow;
     }
   }
 
   /// Acquire a token interactively for the given [scopes]
-  Future<List<Map<String,dynamic>>> loadAccounts() async {
+  Future<List<Map<String, dynamic>>> loadAccounts() async {
     //create the arguments
     var res = <String, dynamic>{};
 
@@ -96,10 +96,10 @@ class PublicClientApplication {
 
       return map;
     } on PlatformException catch (e) {
-      print(e.toString());
+      log(e.toString());
       throw _convertException(e);
     } catch (e) {
-      print(e);
+      log(e.toString());
       rethrow;
     }
   }
@@ -118,7 +118,7 @@ class PublicClientApplication {
     } on PlatformException catch (e) {
       throw _convertException(e);
     } catch (e) {
-      print(e);
+      log(e.toString());
       rethrow;
     }
   }
