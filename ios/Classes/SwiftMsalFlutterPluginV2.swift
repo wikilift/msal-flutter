@@ -64,13 +64,24 @@ public class SwiftMsalFlutterPluginV2: NSObject, FlutterPlugin {
         let application = try MSALPublicClientApplication(configuration: config)
         applicationContext = application
 
+        guard let viewController = topViewController() else {
+            result(FlutterError(code: "NO_VIEW_CONTROLLER", message: "Could not resolve top UIViewController", details: nil))
+            return
+        }
+        
+        let privateSession = dict["privateSession"] as? Bool ?? false
+        let webParams = MSALWebviewParameters(authPresentationViewController: viewController)
+        if #available(iOS 13.0, *) {
+            webParams.prefersEphemeralWebBrowserSession = privateSession
+        }
+        self.webViewParameters = webParams
+
         do {
             let accounts = try application.allAccounts()
             if let first = accounts.first {
                 self.currentAccount = first
             }
-        } catch {
-        }
+        } catch {}
 
         result(true)
     } catch let error {
