@@ -6,6 +6,104 @@
 - Cleaned up the serialization to prevent errors in the channel (especially `accountClaims`).
 Plugin is once again usable on current iOS versions without breaking silent authentication.
 
+## iOS Package Managers
+
+This fork supports both Swift Package Manager and CocoaPods for iOS.
+
+- Swift Package Manager support is declared in `ios/msal_flutter/Package.swift`. The package root is a symlink to `ios/msal-flutter` so Flutter can discover the package at the underscore path while Xcode resolves the SwiftPM package identity with the hyphenated name.
+- CocoaPods support remains in `ios/msal_flutter.podspec`.
+- Both package managers compile the same Swift implementation. CocoaPods uses the Objective-C wrapper in `CocoaPods/MsalFlutterPlugin.m`; SwiftPM uses the Swift wrapper `MsalFlutterPlugin.swift`. Both wrappers delegate to `SwiftMsalFlutterPluginV2`.
+- MSAL is declared as CocoaPods dependency `MSAL`, exact `2.14.1`, and as SwiftPM product `MSAL` from `https://github.com/AzureAD/microsoft-authentication-library-for-objc`, exact `2.14.1`.
+
+Validated local toolchain:
+
+- Flutter 3.44.1 with `enable-swift-package-manager`.
+- Xcode 26.5.
+- Swift 6.3.2 toolchain with `swift-tools-version: 5.9`.
+- CocoaPods 1.17.0.
+- Plugin iOS deployment target: 16.6 for CocoaPods and iOS 16 family for SwiftPM.
+- Example iOS deployment target: 16.6.
+
+### iOS app configuration
+
+Add the MSAL callback scheme to the app `Info.plist`. By default this plugin uses:
+
+```xml
+<key>CFBundleURLTypes</key>
+<array>
+    <dict>
+        <key>CFBundleURLSchemes</key>
+        <array>
+            <string>msauth.[BUNDLE-ID]</string>
+        </array>
+    </dict>
+</array>
+```
+
+If you pass a custom iOS redirect URI, the URL scheme in `Info.plist` must match that redirect URI scheme.
+
+For broker support, keep the MSAL query schemes:
+
+```xml
+<key>LSApplicationQueriesSchemes</key>
+<array>
+    <string>msauth</string>
+    <string>msauthv2</string>
+    <string>msauthv3</string>
+</array>
+```
+
+The example uses Flutter's current scene-based AppDelegate integration. URL callbacks are forwarded from `SceneDelegate.swift`:
+
+```swift
+MSALPublicClientApplication.handleMSALResponse(
+  urlContext.url,
+  sourceApplication: urlContext.options.sourceApplication
+)
+```
+
+For older app templates without a `SceneDelegate`, keep the equivalent `application(_:open:options:)` forwarding in `AppDelegate`.
+
+### Running the example
+
+The example references this plugin with a local path dependency:
+
+```yaml
+msal_flutter:
+  path: ../
+```
+
+It intentionally uses a placeholder client id and scope so the app can build and start without private credentials. Replace these values before testing a real sign-in flow.
+
+SwiftPM validation:
+
+```sh
+cd example
+flutter clean
+flutter pub get
+flutter build ios --simulator
+flutter build ios --no-codesign
+```
+
+CocoaPods validation:
+
+```sh
+flutter config --no-enable-swift-package-manager
+cd example
+flutter clean
+flutter pub get
+flutter build ios --simulator
+flutter config --enable-swift-package-manager
+```
+
+Do not add MSAL manually to the Runner project when using SwiftPM. The plugin declares MSAL transitively.
+
+Known limitations:
+
+- `flutter build` warns that CocoaPods integration is still present when SwiftPM is enabled. This is intentional for this fork because CocoaPods remains supported.
+- The example Podfile raises generated Pods targets to iOS 16.6 in `post_install`. This is required because Flutter regenerates its local `Flutter.podspec` with a lower deployment target, while this fork's contractual minimum is iOS 16.6.
+- `dart format --output=none --set-exit-if-changed .` currently reports pre-existing formatting differences in several Dart model files. They were not reformatted in this SwiftPM migration to avoid unrelated cosmetic churn.
+
 ## Version 2.0.0
 Version 2.0.0+ have moved to nullable and a non-nullable version will not be available. Please ensure all packages you use support nullable and you have updated to the latest version of stable flutter.
 
@@ -114,11 +212,11 @@ This section is mostly copied and modified from Step 1 from [the official iOS MS
 
 3. Open the app's iOS project in xcode, click on the Runner app to open up the configuration, and under capabilities, expand Keychain Sharing and add the keychain group `com.microsoft.adalcache`
 
-4. Import the MSAL library in your AppDelegate.swift by adding the following at the top of the file
+4. Import the MSAL library in your AppDelegate.swift or SceneDelegate.swift by adding the following at the top of the file
 
 `import MSAL`
 
-5. Add the following function to your AppDelegate class
+5. Forward callback URLs to MSAL. For scene-based apps, use `SceneDelegate.scene(_:openURLContexts:)`. For older app templates, add the following function to your AppDelegate class:
 
 ```
 override func application(_ app: UIApplication, open url: URL, options: [UIApplication.OpenURLOptionsKey : Any] = [:]) -> Bool {    

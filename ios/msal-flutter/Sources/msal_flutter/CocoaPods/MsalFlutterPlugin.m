@@ -1,4 +1,4 @@
-#import "MsalFlutterPlugin.h"
+#import <msal_flutter/MsalFlutterPlugin.h>
 #import <msal_flutter/msal_flutter-Swift.h>
 
 @implementation MsalFlutterPlugin

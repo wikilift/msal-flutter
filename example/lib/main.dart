@@ -15,11 +15,9 @@ class MyApp extends StatefulWidget {
 class _MyAppState extends State<MyApp> {
   static const String _authority = "https://login.microsoftonline.com/common";
   static const String _iosRedirectUri =
-      "msal701e9fb7-feb3-4832-a4d7-a706dbe54c40://auth";
-  static const String _clientId = "701e9fb7-feb3-4832-a4d7-a706dbe54c40";
-  static const List<String> _scopes = [
-    "https://otiselevator.com/NonOtisSVTAPI-prod-ES/user_impersonation"
-  ];
+      "msal00000000-0000-0000-0000-000000000000://auth";
+  static const String _clientId = "00000000-0000-0000-0000-000000000000";
+  static const List<String> _scopes = ["User.Read"];
 
   final config = MSALPublicClientApplicationConfig(
     clientId: _clientId,
@@ -61,8 +59,8 @@ class _MyAppState extends State<MyApp> {
       res = "invalid config";
     } on MsalInvalidScopeException {
       res = "Invalid scope";
-    } on MsalException {
-      res = "Error getting token. Unspecified reason";
+    } on MsalException catch (e) {
+      res = "Error getting token: $e";
     }
 
     setState(() {
@@ -112,8 +110,8 @@ class _MyAppState extends State<MyApp> {
       res = "invalid config";
     } on MsalInvalidScopeException {
       res = "Invalid scope";
-    } on MsalException {
-      res = "Error getting token silently!";
+    } on MsalException catch (e) {
+      res = "Error getting token silently: $e";
     }
 
     print("Got token");

@@ -12,11 +12,11 @@ A new flutter plugin project.
   s.license          = { :file => '../LICENSE' }
   s.author           = { 'Muljin Pte. Ltd.' => 'info@muljin.com' }
   s.source           = { :path => '.' }
-  s.source_files = 'Classes/**/*'
-  s.public_header_files = 'Classes/**/*.h'
+  s.source_files = 'msal-flutter/Sources/msal_flutter/**/*.{h,m,swift}'
+  s.public_header_files = 'msal-flutter/Sources/msal_flutter/include/**/*.h'
+  s.exclude_files = 'msal-flutter/Sources/msal_flutter/MsalFlutterPlugin.swift'
   s.dependency 'Flutter'
-  s.dependency 'MSAL', '~> 1.2.0'
+  s.dependency 'MSAL', '2.14.1'
   s.swift_version = '5.0'
-  s.ios.deployment_target = '11.0'
+  s.platform = :ios, '16.6'
 end
-

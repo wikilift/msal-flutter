@@ -3,6 +3,7 @@
 
 import Foundation
 import MSAL
+import UIKit
 
 extension MSALAccount {
     var dictionary: [String: Any?] {
