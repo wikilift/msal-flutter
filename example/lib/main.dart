@@ -14,8 +14,7 @@ class MyApp extends StatefulWidget {
 
 class _MyAppState extends State<MyApp> {
   static const String _authority = "https://login.microsoftonline.com/common";
-  static const String _iosRedirectUri =
-      "msal00000000-0000-0000-0000-000000000000://auth";
+  static const String _iosRedirectUri = "msauth.com.example.a://auth";
   static const String _clientId = "00000000-0000-0000-0000-000000000000";
   static const List<String> _scopes = ["User.Read"];
 

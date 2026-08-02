@@ -12,3 +12,4 @@ export 'src/models/msal_account.dart';
 export 'src/models/msal_result.dart';
 export 'src/models/authority.dart';
 export 'src/models/msal_android_config.dart';
+export 'src/models/msal_cache_config.dart';

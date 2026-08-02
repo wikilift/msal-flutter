@@ -37,7 +37,7 @@
 		<dict>
 			<key>CFBundleURLSchemes</key>
 			<array>
-				<string>msal00000000-0000-0000-0000-000000000000</string>
+				<string>msauth.com.example.a</string>
 			</array>
 		</dict>
 	</array>

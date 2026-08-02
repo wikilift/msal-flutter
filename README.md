@@ -210,7 +210,7 @@ This section is mostly copied and modified from Step 1 from [the official iOS MS
 </array>
 ```
 
-3. Open the app's iOS project in xcode, click on the Runner app to open up the configuration, and under capabilities, expand Keychain Sharing and add the keychain group `com.microsoft.adalcache`
+3. Keychain sharing is optional. If your app sets `MSALCacheConfig(keychainSharingGroup: 'com.microsoft.adalcache')` for shared SSO, add the matching Keychain Sharing entitlement in Xcode. If you do not set a keychain sharing group, the plugin leaves MSAL's default cache configuration in place.
 
 4. Import the MSAL library in your AppDelegate.swift or SceneDelegate.swift by adding the following at the top of the file
 

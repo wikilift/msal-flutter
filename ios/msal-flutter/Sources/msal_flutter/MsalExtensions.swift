@@ -2,8 +2,46 @@
 //
 
 import Foundation
+import Flutter
 import MSAL
 import UIKit
+
+struct MsalFlutterConfigurationError: Error {
+    let code: String
+    let message: String
+    let details: [String: Any]
+
+    init(code: String, message: String, details: [String: Any] = [:]) {
+        self.code = code
+        self.message = message
+        self.details = details
+    }
+
+    func flutterError(configuration: NSDictionary) -> FlutterError {
+        var allDetails = details
+        let clientId = configuration["clientId"] as? String
+        let cacheConfig = configuration["cacheConfig"] as? NSDictionary
+        let keychainSharingGroup = cacheConfig?["keychainSharingGroup"] as? String
+
+        allDetails["hasClientId"] = clientId?.isEmpty == false
+        allDetails["clientIdLength"] = clientId?.count ?? 0
+        allDetails["authority"] = configuration["authority"] as? String ?? NSNull()
+        allDetails["redirectUri"] = configuration["redirectUri"] as? String ?? MSALPublicClientApplicationConfig.generatedRedirectUri() ?? NSNull()
+        allDetails["generatedRedirectUri"] = MSALPublicClientApplicationConfig.generatedRedirectUri() ?? NSNull()
+        allDetails["bundleIdentifier"] = Bundle.main.bundleIdentifier ?? NSNull()
+        allDetails["hasCacheConfig"] = cacheConfig != nil
+        allDetails["keychainSharingGroup"] = keychainSharingGroup ?? NSNull()
+        allDetails["bypassRedirectURIValidation"] = configuration["bypassRedirectURIValidation"] as? Bool ?? false
+        allDetails["extendedLifetimeEnabled"] = configuration["extendedLifetimeEnabled"] as? Bool ?? false
+        allDetails["multipleCloudsSupported"] = configuration["multipleCloudsSupported"] as? Bool ?? false
+
+        if let knownAuthorities = configuration["knownAuthorities"] as? [String] {
+            allDetails["knownAuthorities"] = knownAuthorities
+        }
+
+        return FlutterError(code: code, message: message, details: allDetails)
+    }
+}
 
 extension MSALAccount {
     var dictionary: [String: Any?] {
@@ -89,49 +127,72 @@ extension UIModalPresentationStyle {
 
 extension MSALPublicClientApplicationConfig {
     static func fromDict(dictionary: NSDictionary) throws -> MSALPublicClientApplicationConfig {
-       var  authority :MSALAuthority
-        do {
-            guard let result = try MSALAuthority.fromString(entry: dictionary["authority"] as? String) else {
-                fatalError("guard failure handling has not been implemented")
-            }
-            authority =  result
-        } catch let  error {
-            throw  error
+        guard let clientId = dictionary["clientId"] as? String,
+              clientId.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty == false else {
+            throw MsalFlutterConfigurationError(
+                code: "NO_CLIENTID",
+                message: "Call must include a non-empty clientId"
+            )
         }
-        let config = MSALPublicClientApplicationConfig(clientId: dictionary["clientId"] as! String, redirectUri: (dictionary["redirectUri"] as? String) ?? self.generateRedirectUri(), authority: authority)
+
+        guard let authority = try MSALAuthority.fromString(entry: dictionary["authority"] as? String) else {
+            throw MsalFlutterConfigurationError(
+                code: "INVALID_AUTHORITY",
+                message: "Call must include a non-empty authority URL"
+            )
+        }
+
+        let redirectUri = (dictionary["redirectUri"] as? String)?.trimmingCharacters(in: .whitespacesAndNewlines)
+        let config = MSALPublicClientApplicationConfig(
+            clientId: clientId,
+            redirectUri: redirectUri?.isEmpty == false ? redirectUri : self.generatedRedirectUri(),
+            authority: authority
+        )
         config.bypassRedirectURIValidation = dictionary["bypassRedirectURIValidation"] as? Bool ?? false
         config.clientApplicationCapabilities = dictionary["clientApplicationCapabilities"] as? [String]
         config.extendedLifetimeEnabled = dictionary["extendedLifetimeEnabled"] as? Bool ?? false
-    var knownAuthorities : [MSALAuthority] = [authority]
-            if dictionary["knownAuthorities"] != nil {
-                for item in dictionary["knownAuthorities"] as! [String] {
-                    do{
-                let auth = try MSALAuthority.fromString(entry: item)!
-                        knownAuthorities.insert(auth,at:0)
-            } catch {
 
+        var knownAuthorities: [MSALAuthority] = [authority]
+        if let rawKnownAuthorities = dictionary["knownAuthorities"] {
+            guard let knownAuthorityStrings = rawKnownAuthorities as? [String] else {
+                throw MsalFlutterConfigurationError(
+                    code: "INVALID_AUTHORITY",
+                    message: "knownAuthorities must be a list of authority URLs"
+                )
             }
+
+            for (index, item) in knownAuthorityStrings.enumerated() {
+                guard let knownAuthority = try MSALAuthority.fromString(entry: item) else {
+                    throw MsalFlutterConfigurationError(
+                        code: "INVALID_AUTHORITY",
+                        message: "knownAuthorities[\(index)] must be a non-empty authority URL"
+                    )
                 }
-
+                knownAuthorities.append(knownAuthority)
             }
+        }
 
-
-    config.knownAuthorities = knownAuthorities
+        config.knownAuthorities = knownAuthorities
         if dictionary["cacheConfig"] != nil {
-            config.cacheConfig.fromDict(dict: dictionary["cacheConfig"] as! NSDictionary)
+            guard let cacheConfig = dictionary["cacheConfig"] as? NSDictionary else {
+                throw MsalFlutterConfigurationError(
+                    code: "CONFIG_ERROR",
+                    message: "cacheConfig must be a dictionary"
+                )
+            }
+            config.cacheConfig.fromDict(dict: cacheConfig)
         }
         config.multipleCloudsSupported = dictionary["multipleCloudsSupported"] as? Bool ?? false
         config.sliceConfig = MSALSliceConfig.fromDict(dict: dictionary["sliceConfig"] as? NSDictionary)
-        let tokenBuff = dictionary["tokenExpirationBuffer"] as? Double
-        if tokenBuff != nil {
-            config.tokenExpirationBuffer = tokenBuff!
+        if let tokenBuff = dictionary["tokenExpirationBuffer"] as? NSNumber {
+            config.tokenExpirationBuffer = tokenBuff.doubleValue
         }
         return config
     }
 
     // generates the default redirect uri for IOS
 
-    static private func generateRedirectUri() -> String? {
+    static func generatedRedirectUri() -> String? {
         if let bundleId = Bundle.main.bundleIdentifier {
             return "msauth." + bundleId + "://auth"
         }
@@ -141,21 +202,30 @@ extension MSALPublicClientApplicationConfig {
 
 extension MSALAuthority {
     static func fromString(entry: String?) throws -> MSALAuthority? {
-        if entry?.isEmpty == false {
-            guard let authorityUrl = URL(string: entry!) else {
-                return nil
-            }
-            return try MSALAuthority(url: authorityUrl);
+        guard let entry = entry?.trimmingCharacters(in: .whitespacesAndNewlines),
+              entry.isEmpty == false else {
+            return nil
         }
-        return nil
+
+        guard let authorityUrl = URL(string: entry),
+              let scheme = authorityUrl.scheme?.lowercased(),
+              ["http", "https"].contains(scheme),
+              authorityUrl.host?.isEmpty == false else {
+            throw MsalFlutterConfigurationError(
+                code: "INVALID_AUTHORITY",
+                message: "Invalid authority URL: \(entry)"
+            )
+        }
+
+        return try MSALAuthority(url: authorityUrl)
     }
 }
 
 extension MSALCacheConfig {
     func fromDict(dict: NSDictionary) {
-        let keychain = dict["keychainSharingGroup"] as? String
-        if keychain?.isEmpty == false {
-            keychainSharingGroup = keychain!
+        if let keychain = dict["keychainSharingGroup"] as? String,
+           keychain.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty == false {
+            keychainSharingGroup = keychain
         }
 
     }
@@ -163,9 +233,8 @@ extension MSALCacheConfig {
 
 extension MSALSliceConfig {
     static func fromDict(dict: NSDictionary?) -> MSALSliceConfig? {
-        if dict != nil {
-            let slincConfig = MSALSliceConfig(slice: dict!["slice"] as? String, dc: dict!["dc"] as? String)
-            return slincConfig
+        if let dict = dict {
+            return MSALSliceConfig(slice: dict["slice"] as? String, dc: dict["dc"] as? String)
         }
         return nil
     }

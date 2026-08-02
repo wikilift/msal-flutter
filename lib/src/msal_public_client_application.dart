@@ -26,7 +26,12 @@ class MSALPublicClientApplication {
       final result =
           await _channel.invokeMethod<bool>('initialize', config.toMap());
       return result ?? false;
-    } on PlatformException catch (e) {
+    } on PlatformException catch (e, stackTrace) {
+      log(
+        'initialize PlatformException code=${e.code} message=${e.message} details=${e.details}',
+        error: e,
+        stackTrace: stackTrace,
+      );
       throw _convertException(e);
     }
   }
@@ -112,16 +117,18 @@ class MSALPublicClientApplication {
       case "NO_ACCOUNT":
         return MsalNoAccountException();
       case "NO_CLIENTID":
-        return MsalInvalidConfigurationException("Client Id not set");
+        return MsalInvalidConfigurationException(
+            _platformExceptionMessage(e, "Client Id not set"));
       case "INVALID_AUTHORITY":
-        return MsalInvalidConfigurationException("Invalid authroity set.");
+        return MsalInvalidConfigurationException(
+            _platformExceptionMessage(e, "Invalid authority set."));
       case "INVALID_GRANT":
         return MsalInvalidGrantException();
       case "INVALID_REQUEST":
         return MsalInvalidRequestException("Invalid request");
       case "CONFIG_ERROR":
         return MsalInvalidConfigurationException(
-            "Invalid configuration, please correct your settings and try again");
+            _platformExceptionMessage(e, "Invalid configuration"));
       case "NO_CLIENT":
         return MsalUninitializedException();
       case "CHANGED_CLIENTID":
@@ -135,5 +142,19 @@ class MSALPublicClientApplication {
       default:
         return MsalException("Authentication error");
     }
+  }
+
+  String _platformExceptionMessage(PlatformException e, String fallback) {
+    final message = e.message?.trim();
+    if (message != null && message.isNotEmpty) {
+      return message;
+    }
+
+    final details = e.details?.toString().trim();
+    if (details != null && details.isNotEmpty) {
+      return details;
+    }
+
+    return fallback;
   }
 }

@@ -28,7 +28,17 @@ public class SwiftMsalFlutterPluginV2: NSObject, FlutterPlugin {
     public func handle(_ call: FlutterMethodCall, result: @escaping FlutterResult) {
         switch call.method {
         case "initialize":
-            initialize(result: result, dict: call.arguments as! NSDictionary)
+            guard let dict = call.arguments as? NSDictionary else {
+                result(
+                    FlutterError(
+                        code: "INVALID_REQUEST",
+                        message: "initialize requires a configuration dictionary",
+                        details: nil
+                    )
+                )
+                return
+            }
+            initialize(result: result, dict: dict)
 
         case "initWebViewParams":
             initWebViewParams(result: result, dict: call.arguments as! NSDictionary)
@@ -57,43 +67,124 @@ public class SwiftMsalFlutterPluginV2: NSObject, FlutterPlugin {
     }
 
     private func initialize(result: @escaping FlutterResult, dict: NSDictionary) {
-    do {
-        let config = try MSALPublicClientApplicationConfig.fromDict(dictionary: dict)
-        config.cacheConfig.keychainSharingGroup = "com.microsoft.adalcache"
-
-        let application = try MSALPublicClientApplication(configuration: config)
-        applicationContext = application
-
-        guard let viewController = topViewController() else {
-            result(FlutterError(code: "NO_VIEW_CONTROLLER", message: "Could not resolve top UIViewController", details: nil))
-            return
-        }
-        
-        let privateSession = dict["privateSession"] as? Bool ?? false
-        let webParams = MSALWebviewParameters(authPresentationViewController: viewController)
-        if #available(iOS 13.0, *) {
-            webParams.prefersEphemeralWebBrowserSession = privateSession
-        }
-        self.webViewParameters = webParams
-
         do {
-            let accounts = try application.allAccounts()
-            if let first = accounts.first {
-                self.currentAccount = first
-            }
-        } catch {}
+            let config = try MSALPublicClientApplicationConfig.fromDict(dictionary: dict)
+            let application = try MSALPublicClientApplication(configuration: config)
+            applicationContext = application
 
-        result(true)
-    } catch let error {
-        result(
-            FlutterError(
-                code: "CONFIG_ERROR",
-                message: "Unable to create MSALPublicClientApplication with error: \(error)",
-                details: nil
-            )
+            guard let viewController = topViewController() else {
+                result(FlutterError(code: "NO_VIEW_CONTROLLER", message: "Could not resolve top UIViewController", details: nil))
+                return
+            }
+
+            let privateSession = dict["privateSession"] as? Bool ?? false
+            let webParams = MSALWebviewParameters(authPresentationViewController: viewController)
+            if #available(iOS 13.0, *) {
+                webParams.prefersEphemeralWebBrowserSession = privateSession
+            }
+            self.webViewParameters = webParams
+
+            do {
+                let accounts = try application.allAccounts()
+                if let first = accounts.first {
+                    self.currentAccount = first
+                }
+            } catch {}
+
+            result(true)
+        } catch let error as MsalFlutterConfigurationError {
+            result(error.flutterError(configuration: dict))
+        } catch let error {
+            result(msalConfigurationFlutterError(error: error, configuration: dict))
+        }
+    }
+
+    private func msalConfigurationFlutterError(error: Error, configuration: NSDictionary) -> FlutterError {
+        let nsError = error as NSError
+        var details = sanitizedConfigurationDetails(configuration)
+        details["domain"] = nsError.domain
+        details["code"] = nsError.code
+        details["localizedDescription"] = nsError.localizedDescription
+        details["description"] = String(describing: error)
+        details["userInfo"] = sanitizeUserInfo(nsError.userInfo)
+
+        return FlutterError(
+            code: "CONFIG_ERROR",
+            message: "Unable to create MSALPublicClientApplication: \(nsError.localizedDescription)",
+            details: details
         )
     }
-}
+
+    private func sanitizedConfigurationDetails(_ dictionary: NSDictionary) -> [String: Any] {
+        let clientId = dictionary["clientId"] as? String
+        let cacheConfig = dictionary["cacheConfig"] as? NSDictionary
+        let keychainSharingGroup = cacheConfig?["keychainSharingGroup"] as? String
+
+        var details: [String: Any] = [
+            "hasClientId": clientId?.isEmpty == false,
+            "clientIdLength": clientId?.count ?? 0,
+            "authority": dictionary["authority"] as? String ?? NSNull(),
+            "redirectUri": dictionary["redirectUri"] as? String ?? MSALPublicClientApplicationConfig.generatedRedirectUri() ?? NSNull(),
+            "generatedRedirectUri": MSALPublicClientApplicationConfig.generatedRedirectUri() ?? NSNull(),
+            "bundleIdentifier": Bundle.main.bundleIdentifier ?? NSNull(),
+            "hasCacheConfig": cacheConfig != nil,
+            "keychainSharingGroup": keychainSharingGroup ?? NSNull(),
+            "bypassRedirectURIValidation": dictionary["bypassRedirectURIValidation"] as? Bool ?? false,
+            "extendedLifetimeEnabled": dictionary["extendedLifetimeEnabled"] as? Bool ?? false,
+            "multipleCloudsSupported": dictionary["multipleCloudsSupported"] as? Bool ?? false,
+            "privateSession": dictionary["privateSession"] as? Bool ?? false
+        ]
+
+        if let knownAuthorities = dictionary["knownAuthorities"] as? [String] {
+            details["knownAuthorities"] = knownAuthorities
+        }
+
+        return details
+    }
+
+    private func sanitizeUserInfo(_ userInfo: [String: Any]) -> [String: Any] {
+        var sanitized: [String: Any] = [:]
+
+        for (key, value) in userInfo {
+            let lowerKey = key.lowercased()
+            if lowerKey.contains("token") ||
+                lowerKey.contains("secret") ||
+                lowerKey.contains("password") ||
+                lowerKey.contains("credential") {
+                sanitized[key] = "[redacted]"
+                continue
+            }
+
+            sanitized[key] = sanitizeSerializableValue(value)
+        }
+
+        return sanitized
+    }
+
+    private func sanitizeSerializableValue(_ value: Any) -> Any {
+        switch value {
+        case let string as String:
+            return string
+        case let number as NSNumber:
+            return number
+        case let bool as Bool:
+            return bool
+        case let array as [Any]:
+            return array.map { sanitizeSerializableValue($0) }
+        case let dictionary as [String: Any]:
+            return sanitizeUserInfo(dictionary)
+        case let dictionary as NSDictionary:
+            var sanitized: [String: Any] = [:]
+            for (key, value) in dictionary {
+                if let key = key as? String {
+                    sanitized[key] = sanitizeSerializableValue(value)
+                }
+            }
+            return sanitized
+        default:
+            return String(describing: value)
+        }
+    }
 
     private func loadAccounts(result: @escaping FlutterResult, dict: NSDictionary?) {
         guard let applicationContext = self.applicationContext else {
