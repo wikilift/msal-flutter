@@ -5,7 +5,7 @@ import PackageDescription
 let package = Package(
     name: "msal-flutter",
     platforms: [
-        .iOS(.v16)
+        .iOS(.v15)
     ],
     products: [
         .library(name: "msal-flutter", targets: ["msal_flutter"])
