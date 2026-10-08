@@ -1,23 +1,45 @@
-
-import 'package:msal_flutter/src/models/msal_token_parameters.dart';
-import 'package:msal_flutter/src/utility/extensions/map_cleanup_extension.dart';
+import '../exceptions/msal_invalid_request_exception.dart';
+import 'package:flutter_msal_plus/src/models/msal_token_parameters.dart';
+import 'package:flutter_msal_plus/src/utility/extensions/map_cleanup_extension.dart';
 
 import 'msal_prompt_type.dart';
 
+/// Parámetros para solicitar consentimiento o iniciar sesión de forma interactiva.
 class MSALInteractiveTokenParameters extends MSALTokenParameters {
+  /// Comportamiento solicitado al diálogo interactivo.
   MSALPromptType? promptType;
-  Uri? authority;
-  List<String>? extraScopesToConsent;
-  String? loginHint;
-  MSALInteractiveTokenParameters(
-      {required super.scopes,
-      super.extraQueryParameters,
-      super.correlationId,
-      this.authority,
-      this.extraScopesToConsent,
-      this.loginHint,
-      this.promptType});
 
+  /// Autoridad HTTPS utilizada para autenticar la solicitud.
+  Uri? authority;
+
+  /// Permisos adicionales para los que se solicita consentimiento.
+  List<String>? extraScopesToConsent;
+
+  /// Nombre de usuario sugerido para el diálogo interactivo.
+  String? loginHint;
+  MSALInteractiveTokenParameters({
+    required super.scopes,
+    super.extraQueryParameters,
+    super.correlationId,
+    this.authority,
+    this.extraScopesToConsent,
+    this.loginHint,
+    this.promptType,
+  });
+
+  /// Valida también la autoridad específica de la solicitud interactiva.
+  @override
+  void validate() {
+    super.validate();
+    if (authority != null &&
+        (authority!.scheme != 'https' || authority!.host.isEmpty)) {
+      throw MsalInvalidRequestException(
+        'Authority must be an absolute HTTPS URL',
+      );
+    }
+  }
+
+  /// Serializa los valores presentes para el canal nativo de MSAL.
   Map<String, dynamic> toMap() {
     return {
       'scopes': scopes,

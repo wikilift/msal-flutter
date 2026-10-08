@@ -1,7 +1,8 @@
 import 'msal_exception.dart';
 
+/// La configuración impide inicializar el cliente nativo.
 class MsalInvalidConfigurationException extends MsalException {
-  MsalInvalidConfigurationException(errorMessage) : super(errorMessage);
+  MsalInvalidConfigurationException(super.errorMessage);
 
   @override
   String toString() => errorMessage;

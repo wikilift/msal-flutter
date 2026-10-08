@@ -1,3 +1,4 @@
+/// Estilo de presentación modal utilizado por la vista web de iOS.
 enum IOSModalPresentationStyle {
   fullScreen,
   pageSheet,

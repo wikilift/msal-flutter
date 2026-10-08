@@ -1,7 +1,9 @@
-import 'package:msal_flutter/src/models/msal_token_parameters.dart';
-import 'package:msal_flutter/src/utility/extensions/map_cleanup_extension.dart';
+import 'package:flutter_msal_plus/src/models/msal_token_parameters.dart';
+import 'package:flutter_msal_plus/src/utility/extensions/map_cleanup_extension.dart';
 
+/// Parámetros para obtener o renovar tokens sin interfaz de usuario.
 class MSALSilentTokenParameters extends MSALTokenParameters {
+  /// Solicita a MSAL renovar el token en lugar de usar uno almacenado.
   bool? forceRefresh;
 
   MSALSilentTokenParameters({
@@ -12,16 +14,14 @@ class MSALSilentTokenParameters extends MSALTokenParameters {
     this.forceRefresh,
   });
 
- Map<String, dynamic> toMap() {
+  /// Serializa los valores presentes para el canal nativo de MSAL.
+  Map<String, dynamic> toMap() {
     return {
       'scopes': scopes,
       'correlationId': correlationId,
       'extraQueryParameters': extraQueryParameters,
       'forceRefresh': forceRefresh,
       'authority': overrideAuthority?.authorityUrl.toString(),
-
     }.cleanup();
   }
-
 }
-

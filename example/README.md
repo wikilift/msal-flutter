@@ -1,16 +1,26 @@
-# msal_flutter_example
+# Authentication example
 
-Demonstrates how to use the msal_flutter plugin.
+The example demonstrates initialization, interactive authentication, silent acquisition, selecting accounts and browser sign-out. It displays expiry and account information, never token values. The initial client ID is empty so no real registration is bundled.
 
-## Getting Started
+Configure an Entra public client registration and the iOS URL scheme/keychain entitlements described in the package README. The checked-in iOS bundle identifier is `com.example.a`, with redirect `msauth.com.example.a://auth`; replace both together for your own app.
 
-This project is a starting point for a Flutter application.
+```sh
+flutter pub get
+flutter run \
+  --dart-define=CLIENT_ID=YOUR-CLIENT-ID \
+  --dart-define=REDIRECT_URI=msauth.com.example.a://auth \
+  --dart-define=SCOPE=https://api.example.com/application/user_impersonation
+```
 
-A few resources to get you started if this is your first Flutter project:
+No tenant ID is required. The example omits authority configuration and uses MSAL’s generic default. `SCOPE` defaults to a placeholder enterprise API scope; replace it with your existing application’s exact registered API scope. For optional tenant-specific configuration, follow the advanced authority section in the package README. Android requires a different redirect with the application ID and certificate hash, and matching `BrowserTabActivity` manifest configuration. Replace the signature placeholder before testing Android login.
 
-- [Lab: Write your first Flutter app](https://flutter.io/docs/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://flutter.io/docs/cookbook)
+```sh
+flutter analyze
+flutter test
+flutter config --enable-swift-package-manager
+flutter build ios --simulator
+flutter config --no-enable-swift-package-manager
+flutter build ios --simulator
+```
 
-For help getting started with Flutter, view our 
-[online documentation](https://flutter.io/docs), which offers tutorials, 
-samples, guidance on mobile development, and a full API reference.
+Both iOS integration paths target iOS 15.0. Use a signed device to verify keychain/broker behavior and real authentication. Builds without credentials only verify compilation.

@@ -1,0 +1,29 @@
+{
+  "checked_at": "2026-10-08",
+  "selected_version": "2.0.0",
+  "selected_revision": "03ed4aed29eceb75781f361bfad7f09635212bff",
+  "selected_archive_sha256": "e7e8e6107d5f652d0dabaebfcedfe250f0e363b3db277db30ff30fb622cea1c1",
+  "ios_device_binary_minimum": "14.0",
+  "ios_simulator_binary_minimum": "14.0",
+  "ios_plugin_minimum": "15.0",
+  "binary_boundary": {
+    "2.0.0": "14.0",
+    "2.1.0": "16.0",
+    "2.2.0": "16.0",
+    "2.3.0": "16.0",
+    "2.4.0": "16.0",
+    "2.4.1": "16.0",
+    "2.4.2": "16.0",
+    "2.4.3": "16.0",
+    "2.5.0": "16.0",
+    "2.5.1": "16.0",
+    "2.5.2": "16.0",
+    "2.6.0": "16.0"
+  },
+  "distribution_notes": {
+    "2.4.3": "SPM manifest points to 2.4.1 binary",
+    "2.5.2": "SPM manifest points to 2.5.0 binary"
+  },
+  "transitive_spm_packages": [],
+  "runtime_validation": "Native regression tests ran on iOS 27; no iOS 15 runtime was installed."
+}

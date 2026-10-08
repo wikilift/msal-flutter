@@ -1,3 +1,4 @@
+/// Motor de presentación web solicitado a MSAL en iOS.
 enum MSALWebviewType {
   safariViewController,
   authenticationSession,
@@ -11,4 +12,3 @@ enum MSALWebviewType {
     );
   }
 }
-

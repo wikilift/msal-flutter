@@ -1,19 +1,16 @@
-import 'package:msal_flutter/src/models/ios_modal_presentation_style.dart';
-import 'package:msal_flutter/src/models/msal_webview_type.dart';
-import 'package:msal_flutter/src/utility/extensions/map_cleanup_extension.dart';
+import 'package:flutter_msal_plus/src/models/ios_modal_presentation_style.dart';
+import 'package:flutter_msal_plus/src/models/msal_webview_type.dart';
+import 'package:flutter_msal_plus/src/utility/extensions/map_cleanup_extension.dart';
 
+/// Opciones de presentación web para la autenticación en iOS.
 class MSALWebviewParameters {
-  /// A specific webView type for the interactive authentication flow. By default, it will be set to MSALGlobalConfig.defaultWebviewType.
+  /// Tipo de presentación web utilizado por MSAL en iOS.
   final MSALWebviewType? webviewType;
 
-  /// A Boolean value that indicates whether the ASWebAuthenticationSession should ask the browser for a private authentication session.
-  /// The value of this property is false by default. For more info see
-  /// here: https://developer.apple.com/documentation/authenticationservices/aswebauthenticationsession/3237231-prefersephemeralwebbrowsersessio?language=objc
+  /// Solicita una sesión privada del navegador en iOS.
   final bool prefersEphemeralWebBrowserSession;
 
-  /// Modal presentation style for displaying authentication web content.
-  /// Note that presentationStyle has no effect when webviewType == MSALWebviewType.MSALWebviewTypeDefault
-  /// or webviewType == MSALWebviewType.MSALWebviewTypeAuthenticationSession.
+  /// Estilo modal de presentación de la interfaz web en iOS.
   final IOSModalPresentationStyle? presentationStyle;
   MSALWebviewParameters({
     this.prefersEphemeralWebBrowserSession = false,
@@ -21,6 +18,7 @@ class MSALWebviewParameters {
     this.presentationStyle,
   });
 
+  /// Serializa los valores presentes para el canal nativo de MSAL.
   Map<String, dynamic> toMap() {
     return {
       'webviewType': webviewType?.name,
@@ -29,4 +27,3 @@ class MSALWebviewParameters {
     }.cleanup();
   }
 }
-

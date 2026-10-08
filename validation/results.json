@@ -1,0 +1,28 @@
+{
+  "package_tests": 24,
+  "example_widget_tests": 1,
+  "native_tests": 6,
+  "native_runtime": "iOS 27.0",
+  "native_final_result": "TEST SUCCEEDED",
+  "native_cases": [
+    "RunnerTests.testExplicitAuthoritiesDoNotTrustAdditionalEndpoints()",
+    "RunnerTests.testMalformedArgumentsCompleteOnce()",
+    "RunnerTests.testMissingClientIdDoesNotCrashInitialization()",
+    "RunnerTests.testNestedClaimsUseFlutterCompatibleValues()",
+    "RunnerTests.testUninitializedClientReturnsControlledError()",
+    "RunnerTests.testUnknownMethodUsesFlutterNotImplemented()"
+  ],
+  "integration_builds": [
+    "spm_simulator",
+    "spm_unsigned_device",
+    "cocoapods_simulator",
+    "cocoapods_unsigned_device",
+    "android_debug_apk"
+  ],
+  "pana_points": 150,
+  "pana_max_points": 160,
+  "documentation": "149/197 (75.6%)",
+  "root_publish_dry_run": "One warning: uncommitted source changes",
+  "snapshot_publish_dry_run": "Zero warnings, exit 0",
+  "spm_enabled_restored": true
+}

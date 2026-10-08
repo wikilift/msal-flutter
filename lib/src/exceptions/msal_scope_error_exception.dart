@@ -1,5 +1,6 @@
-import 'package:msal_flutter/msal_flutter.dart';
+import 'msal_exception.dart';
 
+/// El servicio no concedió los permisos solicitados.
 class MsalScopeErrorException extends MsalException {
   MsalScopeErrorException() : super("Scope error or scope declined");
 }

@@ -1,0 +1,41 @@
+{
+  "verdict": "PRODUCTION CONTRACT NOT YET VERIFIED \u2014 native initialization parity passed; live authentication not executed",
+  "baseline_commit": "b44c247cf03b00eecc27a8982710432ab517af23",
+  "ios_msal_version": "2.0.0",
+  "ios_minimum": "15.0",
+  "android_msal_version": "4.0.2",
+  "flutter_tests": 68,
+  "production_contract_tests": 32,
+  "client_id_only_tests": 12,
+  "example_widget_tests": 1,
+  "android_jvm_tests": 4,
+  "ios_tests_spm": 16,
+  "ios_tests_cocoapods": 13,
+  "native_production_initialization": {
+    "outcome": "passed with existing OmniTool caller parameters",
+    "existing_caller_validation_option": true,
+    "plugin_default_validation_option": false,
+    "same_sdk_original_modernized_parity": "passed",
+    "actual_flutter_handler_initialization": "passed"
+  },
+  "builds": {
+    "ios_spm_simulator": "passed",
+    "ios_cocoapods_simulator": "passed",
+    "android_debug_apk": "passed"
+  },
+  "live_microsoft_authentication": "not executed",
+  "fixture_archive_exclusions": [
+    "test/production_auth_compatibility_test.dart",
+    "example/ios/RunnerTests/",
+    "android/src/test/",
+    "validation/",
+    "PRODUCTION_AUTH_AUDIT.md"
+  ],
+  "publication": "not performed",
+  "prior_isolated_rejection": {
+    "cause": "omitted existing caller option; incomplete production fixture",
+    "code": -50000,
+    "internal_code": -42011
+  },
+  "restoration_evidence": "/tmp/msal-restored-native-final-20261008.xcresult"
+}

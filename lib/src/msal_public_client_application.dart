@@ -1,76 +1,82 @@
-import 'dart:developer';
-import 'dart:io';
+import 'package:flutter/foundation.dart';
 
 import 'package:flutter/services.dart';
 
-import '../msal_flutter.dart';
-import 'exceptions/msal_scope_error_exception.dart';
+import '../flutter_msal_plus.dart';
 
+/// Cliente MSAL asociado al canal nativo del motor Flutter.
 class MSALPublicClientApplication {
-  static const MethodChannel _channel = const MethodChannel('msal_flutter');
+  static const MethodChannel _channel = MethodChannel('msal_flutter');
 
+  /// Inicializa el cliente y rechaza configuraciones o resultados nativos fallidos.
   static Future<MSALPublicClientApplication> createPublicClientApplication(
-      MSALPublicClientApplicationConfig config) async {
-    try {
-      final clientApplication = MSALPublicClientApplication();
-      await clientApplication._initialize(config);
-      return clientApplication;
-    } catch (e) {
-      log(e.toString());
-      rethrow;
+    MSALPublicClientApplicationConfig config,
+  ) async {
+    final clientApplication = MSALPublicClientApplication();
+    if (!await clientApplication._initialize(config)) {
+      throw MsalInitializationException();
     }
+    return clientApplication;
   }
 
   Future<bool> _initialize(MSALPublicClientApplicationConfig config) async {
     try {
-      final result =
-          await _channel.invokeMethod<bool>('initialize', config.toMap());
-      return result ?? false;
-    } on PlatformException catch (e, stackTrace) {
-      log(
-        'initialize PlatformException code=${e.code} message=${e.message} details=${e.details}',
-        error: e,
-        stackTrace: stackTrace,
-      );
-      throw _convertException(e);
-    }
-  }
-
-  /// this is `ios` only you need to set web param before acquireing token the client
-  Future<bool> initWebViewParams(
-      MSALWebviewParameters webviewParameters) async {
-    try {
-      if (Platform.isAndroid) {
-        return true;
-      }
       final result = await _channel.invokeMethod<bool>(
-          'initWebViewParams', webviewParameters.toMap());
+        'initialize',
+        config.toMap(),
+      );
       return result ?? false;
     } on PlatformException catch (e) {
       throw _convertException(e);
     }
   }
 
-  Future<List<MSALAccount>?> loadAccounts(
-      [MSALAccountEnumerationParameters? enumerationParameters]) async {
+  /// Configura la presentación web en iOS; en Android devuelve true sin cambios.
+  Future<bool> initWebViewParams(
+    MSALWebviewParameters webviewParameters,
+  ) async {
+    try {
+      if (defaultTargetPlatform == TargetPlatform.android) {
+        return true;
+      }
+      final result = await _channel.invokeMethod<bool>(
+        'initWebViewParams',
+        webviewParameters.toMap(),
+      );
+      return result ?? false;
+    } on PlatformException catch (e) {
+      throw _convertException(e);
+    }
+  }
+
+  /// Enumera cuentas; los filtros opcionales se aplican en iOS.
+  Future<List<MSALAccount>?> loadAccounts([
+    MSALAccountEnumerationParameters? enumerationParameters,
+  ]) async {
     try {
       final result = await _channel.invokeMethod<List>(
-          'loadAccounts', enumerationParameters?.toMap());
+        'loadAccounts',
+        enumerationParameters?.toMap(),
+      );
 
       return result
           ?.map((e) => MSALAccount.fromMap(Map<String, dynamic>.from(e)))
           .toList();
     } on PlatformException catch (e) {
-      log('loadAccounts PlatformException code=${e.code} message=${e.message} details=${e.details}');
       throw _convertException(e);
     }
   }
 
+  /// Solicita autenticación interactiva para los permisos indicados.
   Future<MSALResult?> acquireToken(
-      MSALInteractiveTokenParameters interactiveTokenParameters) async {
+    MSALInteractiveTokenParameters interactiveTokenParameters,
+  ) async {
+    interactiveTokenParameters.validate();
     try {
       final result = await _channel.invokeMethod(
-          'acquireToken', interactiveTokenParameters.toMap());
+        'acquireToken',
+        interactiveTokenParameters.toMap(),
+      );
       return result != null
           ? MSALResult.fromMap(Map<String, dynamic>.from(result))
           : null;
@@ -79,13 +85,16 @@ class MSALPublicClientApplication {
     }
   }
 
+  /// Obtiene un token mediante la caché y renovación nativas para la cuenta indicada.
   Future<MSALResult?> acquireTokenSilent(
-      MSALSilentTokenParameters silentTokenParameters,
-      MSALAccount? account) async {
+    MSALSilentTokenParameters silentTokenParameters,
+    MSALAccount? account,
+  ) async {
+    silentTokenParameters.validate();
     try {
       final result = await _channel.invokeMethod('acquireTokenSilent', {
         'accountId': account?.identifier,
-        'tokenParameters': silentTokenParameters.toMap()
+        'tokenParameters': silentTokenParameters.toMap(),
       });
       return result != null
           ? MSALResult.fromMap(Map<String, dynamic>.from(result))
@@ -95,12 +104,15 @@ class MSALPublicClientApplication {
     }
   }
 
+  /// Cierra la sesión de una cuenta; el resultado indica si MSAL completó la operación.
   Future<bool> logout(
-      MSALSignoutParameters signoutParameters, MSALAccount account) async {
+    MSALSignoutParameters signoutParameters,
+    MSALAccount account,
+  ) async {
     try {
       final result = await _channel.invokeMethod<bool>('logout', {
         'accountId': account.identifier,
-        'signoutParameters': signoutParameters.toMap()
+        'signoutParameters': signoutParameters.toMap(),
       });
       return result ?? false;
     } on PlatformException catch (e) {
@@ -118,17 +130,20 @@ class MSALPublicClientApplication {
         return MsalNoAccountException();
       case "NO_CLIENTID":
         return MsalInvalidConfigurationException(
-            _platformExceptionMessage(e, "Client Id not set"));
+          _platformExceptionMessage(e, "Client Id not set"),
+        );
       case "INVALID_AUTHORITY":
         return MsalInvalidConfigurationException(
-            _platformExceptionMessage(e, "Invalid authority set."));
+          _platformExceptionMessage(e, "Invalid authority set."),
+        );
       case "INVALID_GRANT":
         return MsalInvalidGrantException();
       case "INVALID_REQUEST":
         return MsalInvalidRequestException("Invalid request");
       case "CONFIG_ERROR":
         return MsalInvalidConfigurationException(
-            _platformExceptionMessage(e, "Invalid configuration"));
+          _platformExceptionMessage(e, "Invalid configuration"),
+        );
       case "NO_CLIENT":
         return MsalUninitializedException();
       case "CHANGED_CLIENTID":
@@ -150,7 +165,9 @@ class MSALPublicClientApplication {
       return message;
     }
 
-    final details = e.details?.toString().trim();
+    final details = e.details is Map
+        ? (e.details as Map)["code"]?.toString()
+        : null;
     if (details != null && details.isNotEmpty) {
       return details;
     }

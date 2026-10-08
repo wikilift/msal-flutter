@@ -1,14 +1,30 @@
+import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:msal_flutter_example/main.dart';
+import 'package:flutter_msal_plus_example/main.dart';
 
 void main() {
-  testWidgets('renders the example app controls', (WidgetTester tester) async {
-    await tester.pumpWidget(MyApp());
-
-    expect(find.text('Plugin example app'), findsOneWidget);
-    expect(find.text('AcquireToken()'), findsOneWidget);
-    expect(find.text('loadAccount()'), findsOneWidget);
-    expect(find.text('AcquireTokenSilently()'), findsOneWidget);
-    expect(find.text('Logout'), findsOneWidget);
+  testWidgets('authentication is disabled until MSAL is initialized', (
+    tester,
+  ) async {
+    await tester.pumpWidget(const MsalExampleApp());
+    expect(find.text('MSAL authentication'), findsOneWidget);
+    expect(
+      tester
+          .widget<FilledButton>(find.widgetWithText(FilledButton, 'Sign in'))
+          .onPressed,
+      isNull,
+    );
+    expect(
+      tester
+          .widget<OutlinedButton>(
+            find.widgetWithText(OutlinedButton, 'Acquire silently'),
+          )
+          .onPressed,
+      isNull,
+    );
+    expect(
+      find.text('Configure CLIENT_ID before initializing.'),
+      findsOneWidget,
+    );
   });
 }

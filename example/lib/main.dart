@@ -1,191 +1,188 @@
-import 'dart:async';
-import 'dart:developer';
-
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
-import 'package:msal_flutter/msal_flutter.dart';
+import 'package:flutter_msal_plus/flutter_msal_plus.dart';
 
-void main() => runApp(MyApp());
+void main() => runApp(const MsalExampleApp());
 
-class MyApp extends StatefulWidget {
+class MsalExampleApp extends StatelessWidget {
+  const MsalExampleApp({super.key});
+
   @override
-  _MyAppState createState() => _MyAppState();
+  Widget build(BuildContext context) => MaterialApp(
+    title: 'MSAL authentication',
+    theme: ThemeData(useMaterial3: true, colorSchemeSeed: Colors.indigo),
+    home: const AuthenticationPage(),
+  );
 }
 
-class _MyAppState extends State<MyApp> {
-  static const String _authority = "https://login.microsoftonline.com/common";
-  static const String _iosRedirectUri = "msauth.com.example.a://auth";
-  static const String _clientId = "00000000-0000-0000-0000-000000000000";
-  static const List<String> _scopes = ["User.Read"];
+class AuthenticationPage extends StatefulWidget {
+  const AuthenticationPage({super.key});
 
-  final config = MSALPublicClientApplicationConfig(
-    clientId: _clientId,
-    iosRedirectUri: _iosRedirectUri,
-    authority: Uri.parse(_authority),
+  @override
+  State<AuthenticationPage> createState() => _AuthenticationPageState();
+}
+
+class _AuthenticationPageState extends State<AuthenticationPage> {
+  static const clientId = String.fromEnvironment('CLIENT_ID');
+  static const redirectUri = String.fromEnvironment(
+    'REDIRECT_URI',
+    defaultValue: 'msauth.com.example.a://auth',
   );
-  String _output = 'NONE';
+  static const scope = String.fromEnvironment(
+    'SCOPE',
+    defaultValue: 'https://api.example.com/application/user_impersonation',
+  );
+  MSALPublicClientApplication? _application;
+  List<MSALAccount> _accounts = [];
+  MSALAccount? _selectedAccount;
+  bool _busy = false;
+  String _status = 'Configure CLIENT_ID before initializing.';
 
-  MSALPublicClientApplication? pca;
-  List<MSALAccount>? accounts;
-
-  Future<void> _acquireToken() async {
-    print("called acquiretoken");
-    //create the PCA if not already created
-    if (pca == null) {
-      print("creating pca...");
-      pca = await MSALPublicClientApplication.createPublicClientApplication(
-          config);
-      await pca!.initWebViewParams(MSALWebviewParameters());
-    }
-
-    print("pca created");
-
-    String res = '';
+  Future<void> _run(Future<String> Function() operation) async {
+    setState(() => _busy = true);
     try {
-      MSALResult? resp = await pca!
-          .acquireToken(MSALInteractiveTokenParameters(scopes: _scopes));
-      res = resp?.account.identifier ?? 'noAuth';
-      res += "\n${resp?.account.username ?? "noName"}";
-      res += "\n${resp?.account.accountClaims ?? "noClaims"}";
-      res += "\n${resp?.authenticationScheme ?? "noAuthScheme"}";
-      res += "\n${resp?.scopes ?? "noScopes"}";
-      res += "\n${resp?.expiresOn?.toIso8601String() ?? "noExpirestime"}";
+      final status = await operation();
+      if (mounted) setState(() => _status = status);
     } on MsalUserCancelledException {
-      res = "User cancelled";
-    } on MsalNoAccountException {
-      res = "no account";
-    } on MsalInvalidConfigurationException {
-      res = "invalid config";
-    } on MsalInvalidScopeException {
-      res = "Invalid scope";
-    } on MsalException catch (e) {
-      res = "Error getting token: $e";
-    }
-
-    setState(() {
-      _output = res;
-    });
-  }
-
-  Future<void> _loadAccount() async {
-    if (pca == null) {
-      print("initializing pca");
-      pca = await MSALPublicClientApplication.createPublicClientApplication(
-          config);
-      await pca!.initWebViewParams(MSALWebviewParameters());
-    }
-    try {
-      final result = await pca!.loadAccounts();
-      if (result != null) {
-        accounts = result;
+      if (mounted) setState(() => _status = 'Authentication cancelled.');
+    } on MsalException catch (error) {
+      if (mounted) setState(() => _status = error.toString());
+    } catch (_) {
+      if (mounted) {
+        setState(
+          () => _status =
+              'Authentication unavailable. Verify native configuration.',
+        );
       }
-    } catch (e) {
-      log(e.toString());
+    } finally {
+      if (mounted) setState(() => _busy = false);
     }
-    setState(() {});
   }
 
-  Future<void> _acquireTokenSilently() async {
-    if (pca == null) {
-      print("initializing pca");
-      pca = await MSALPublicClientApplication.createPublicClientApplication(
-          config);
-      await pca!.initWebViewParams(MSALWebviewParameters());
-    }
-
-    String res = 'res';
-    try {
-      final response = await pca!.acquireTokenSilent(
-          MSALSilentTokenParameters(
-            scopes: _scopes,
+  Future<String> _initialize() async {
+    _application =
+        await MSALPublicClientApplication.createPublicClientApplication(
+          MSALPublicClientApplicationConfig(
+            clientId: clientId,
+            iosRedirectUri: redirectUri,
+            androidRedirectUri: redirectUri,
           ),
-          accounts?.isEmpty == true ? null : accounts?.first);
-      res = response?.account.identifier ?? '';
-    } on MsalUserCancelledException {
-      res = "User cancelled";
-    } on MsalNoAccountException {
-      res = "no account";
-    } on MsalInvalidConfigurationException {
-      res = "invalid config";
-    } on MsalInvalidScopeException {
-      res = "Invalid scope";
-    } on MsalException catch (e) {
-      res = "Error getting token silently: $e";
-    }
+        );
+    await _reloadAccounts();
+    return 'MSAL initialized.';
+  }
 
-    print("Got token");
-    print(res);
-
+  Future<void> _reloadAccounts() async {
+    final accounts = await _application!.loadAccounts() ?? [];
+    if (!mounted) return;
     setState(() {
-      _output = res;
+      _accounts = accounts;
+      _selectedAccount =
+          accounts
+              .where(
+                (account) => account.identifier == _selectedAccount?.identifier,
+              )
+              .firstOrNull ??
+          accounts.firstOrNull;
     });
   }
 
-  Future<void> _logout() async {
-    print("called logout");
+  Future<String> _login() async {
+    final result = await _application!.acquireToken(
+      MSALInteractiveTokenParameters(scopes: [scope]),
+    );
+    await _reloadAccounts();
+    return result == null
+        ? 'No result returned.'
+        : 'Signed in. Token expires: ${result.expiresOn?.toLocal() ?? 'unknown'}';
+  }
 
-    if (pca == null) {
-      print("initializing pca");
-      pca = await MSALPublicClientApplication.createPublicClientApplication(
-          config);
-      await pca!.initWebViewParams(MSALWebviewParameters());
-    }
+  Future<String> _silent() async {
+    final result = await _application!.acquireTokenSilent(
+      MSALSilentTokenParameters(scopes: [scope]),
+      _selectedAccount,
+    );
+    return result == null
+        ? 'No result returned.'
+        : 'Token acquired silently. Expires: ${result.expiresOn?.toLocal() ?? 'unknown'}';
+  }
 
-    String res;
-
-    try {
-      if (accounts?.isNotEmpty != true) {
-        res = "No hay cuentas cargadas";
-      } else {
-        await pca!.logout(MSALSignoutParameters(), accounts!.first);
-        res = "Account removed";
-      }
-    } on MsalException catch (e) {
-      res = "Error signing out: $e";
-    } on PlatformException catch (e) {
-      res = "PlatformException: ${e.message}";
-    }
-
-    setState(() {
-      _output = res;
-    });
+  Future<String> _logout() async {
+    final success = await _application!.logout(
+      const MSALSignoutParameters(signoutFromBrowser: true),
+      _selectedAccount!,
+    );
+    await _reloadAccounts();
+    return success ? 'Signed out.' : 'Sign-out did not complete.';
   }
 
   @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      home: Scaffold(
-        appBar: AppBar(
-          title: const Text('Plugin example app'),
-        ),
-        body: Center(
-          child: Column(
-            children: <Widget>[
-              ElevatedButton(
-                onPressed: _acquireToken,
-                child: Text('AcquireToken()'),
+  Widget build(BuildContext context) => Scaffold(
+    appBar: AppBar(title: const Text('MSAL authentication')),
+    body: Padding(
+      padding: const EdgeInsets.all(24),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Text(_status, key: const Key('status')),
+          const SizedBox(height: 16),
+          if (_busy) const LinearProgressIndicator(),
+          Wrap(
+            spacing: 12,
+            runSpacing: 12,
+            children: [
+              FilledButton(
+                onPressed: _busy ? null : () => _run(_initialize),
+                child: const Text('Initialize'),
               ),
-              ElevatedButton(
-                  onPressed: _loadAccount, child: Text('loadAccount()')),
-              ElevatedButton(
-                  onPressed: _acquireTokenSilently,
-                  child: Text('AcquireTokenSilently()')),
-              ElevatedButton(onPressed: _logout, child: Text('Logout')),
-              Text(_output),
-              Expanded(
-                  child: ListView.builder(
-                itemCount: accounts?.length ?? 0,
-                itemBuilder: (context, index) {
-                  final item = accounts![index];
-                  return ListTile(
-                    title: Text(item.username ?? item.identifier),
-                  );
-                },
-              ))
+              FilledButton(
+                onPressed: _busy || _application == null
+                    ? null
+                    : () => _run(_login),
+                child: const Text('Sign in'),
+              ),
+              OutlinedButton(
+                onPressed: _busy || _application == null
+                    ? null
+                    : () => _run(() async {
+                        await _reloadAccounts();
+                        return 'Accounts refreshed.';
+                      }),
+                child: const Text('Refresh accounts'),
+              ),
+              OutlinedButton(
+                onPressed: _busy || _selectedAccount == null
+                    ? null
+                    : () => _run(_silent),
+                child: const Text('Acquire silently'),
+              ),
+              OutlinedButton(
+                onPressed: _busy || _selectedAccount == null
+                    ? null
+                    : () => _run(_logout),
+                child: const Text('Sign out'),
+              ),
             ],
           ),
-        ),
+          const SizedBox(height: 24),
+          const Text('Select an account'),
+          Expanded(
+            child: ListView(
+              children: [
+                for (final account in _accounts)
+                  ListTile(
+                    selected:
+                        account.identifier == _selectedAccount?.identifier,
+                    title: Text(account.username ?? 'Account'),
+                    subtitle: Text(account.identifier),
+                    onTap: _busy
+                        ? null
+                        : () => setState(() => _selectedAccount = account),
+                  ),
+              ],
+            ),
+          ),
+        ],
       ),
-    );
-  }
+    ),
+  );
 }

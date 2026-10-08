@@ -9,7 +9,7 @@
 	<string>$(DEVELOPMENT_LANGUAGE)</string>
 
 	<key>CFBundleDisplayName</key>
-	<string>A</string>
+	<string>MSAL Example</string>
 
 	<key>CFBundleExecutable</key>
 	<string>$(EXECUTABLE_NAME)</string>
@@ -21,7 +21,7 @@
 	<string>6.0</string>
 
 	<key>CFBundleName</key>
-	<string>a</string>
+	<string>flutter_msal_plus_example</string>
 
 	<key>CFBundlePackageType</key>
 	<string>APPL</string>

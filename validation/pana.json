@@ -1,0 +1,160 @@
+{
+ "createdAt": "2026-10-08T09:56:02.706895",
+ "runtimeInfo": {
+  "panaVersion": "0.23.19",
+  "sdkVersion": "3.13.5",
+  "flutterVersions": {
+   "frameworkVersion": "3.47.6",
+   "channel": "stable",
+   "repositoryUrl": "https://github.com/flutter/flutter.git",
+   "frameworkRevision": "5fc346839b5d0eef006ed8404392afb4dfae428d",
+   "frameworkCommitDate": "2026-09-30 15:02:49 -0700",
+   "engineRevision": "692136cb6582dbfc5af3fb33c2515a069f2f66d0",
+   "engineCommitDate": "2026-09-30 00:56:59.000Z",
+   "engineContentHash": "b8c8d3d8d5d0095127057f8a29ca8cc53da2167c",
+   "engineBuildDate": "2026-09-30 03:19:13.915",
+   "dartSdkVersion": "3.13.5",
+   "devToolsVersion": "2.60.0",
+   "flutterVersion": "3.47.6"
+  }
+ },
+ "packageName": "flutter_msal_plus",
+ "packageVersion": "1.0.0",
+ "pubspec": {
+  "name": "flutter_msal_plus",
+  "description": "Flutter integration with native Microsoft Authentication Library for interactive and silent authentication and account management.",
+  "version": "1.0.0",
+  "repository": "https://github.com/wikilift/msal-flutter",
+  "environment": {
+   "sdk": ">=3.12.0 <4.0.0",
+   "flutter": ">=3.44.0"
+  },
+  "dependencies": {
+   "flutter": {
+    "sdk": "flutter"
+   }
+  },
+  "dev_dependencies": {
+   "flutter_test": {
+    "sdk": "flutter"
+   },
+   "flutter_lints": "^6.0.0"
+  },
+  "flutter": {
+   "plugin": {
+    "platforms": {
+     "android": {
+      "package": "org.wikilift.flutter_msal_plus",
+      "pluginClass": "FlutterMsalPlusPlugin"
+     },
+     "ios": {
+      "pluginClass": "FlutterMsalPlusPlugin"
+     }
+    }
+   }
+  }
+ },
+ "allDependencies": [
+  "characters",
+  "collection",
+  "flutter",
+  "flutter_lints",
+  "flutter_test",
+  "material_color_utilities",
+  "meta",
+  "vector_math"
+ ],
+ "tags": [
+  "sdk:flutter",
+  "platform:android",
+  "platform:ios",
+  "is:plugin",
+  "is:null-safe",
+  "is:swiftpm-plugin",
+  "is:built-in-kotlin",
+  "is:dart3-compatible",
+  "license:bsd-3-clause",
+  "license:fsf-libre",
+  "license:osi-approved"
+ ],
+ "report": {
+  "sections": [
+   {
+    "id": "convention",
+    "title": "Follow Dart file conventions",
+    "grantedPoints": 20,
+    "maxPoints": 30,
+    "status": "failed",
+    "summary": "### [x] 0/10 points: Provide a valid `pubspec.yaml`\n\n<details>\n<summary>\nFailed to verify repository URL.\n</summary>\n\n*Repository has no matching `pubspec.yaml` with `name: flutter_msal_plus`.*\n\nPlease provide a valid [`repository`](https://dart.dev/tools/pub/pubspec#repository) URL in `pubspec.yaml`, such that:\n\n * `repository` can be cloned,\n * a clone of the repository contains a `pubspec.yaml`, which:,\n    * contains `name: flutter_msal_plus`,\n    * contains a `version` property, and,\n    * does not contain a `publish_to` property.\n</details>\n\n### [*] 5/5 points: Provide a valid `README.md`\n\n### [*] 5/5 points: Provide a valid `CHANGELOG.md`\n\n### [*] 10/10 points: Use an OSI-approved license\n\nDetected license: `BSD-3-Clause`.\n"
+   },
+   {
+    "id": "documentation",
+    "title": "Provide documentation",
+    "grantedPoints": 20,
+    "maxPoints": 20,
+    "status": "passed",
+    "summary": "### [*] 10/10 points: 20% or more of the public API has dartdoc comments\n\n149 out of 197 API elements (75.6 %) have documentation comments.\n\nSome symbols that are missing documentation: `flutter_msal_plus`, `flutter_msal_plus.AndroidLoggerConfiguration.AndroidLoggerConfiguration.new`, `flutter_msal_plus.Authority.Authority.new`, `flutter_msal_plus.HttpConfiguration.HttpConfiguration.new`, `flutter_msal_plus.IOSModalPresentationStyle.fromString`.\n\n### [*] 10/10 points: Package has an example\n"
+   },
+   {
+    "id": "platform",
+    "title": "Platform support",
+    "grantedPoints": 20,
+    "maxPoints": 20,
+    "status": "passed",
+    "summary": "### [*] 20/20 points: Supports 2 of 6 possible platforms (**iOS**, **Android**, Web, Windows, macOS, Linux)\n\n* ✓ Android\n\n* ✓ iOS\n\n\nThese platforms are not supported:\n\n<details>\n<summary>\nPackage does not support platform `Windows`.\n</summary>\n\nBecause:\n* `package:flutter_msal_plus/flutter_msal_plus.dart` that declares support for platforms: `Android`, `iOS`.\n</details>\n\n<details>\n<summary>\nPackage does not support platform `Linux`.\n</summary>\n\nBecause:\n* `package:flutter_msal_plus/flutter_msal_plus.dart` that declares support for platforms: `Android`, `iOS`.\n</details>\n\n<details>\n<summary>\nPackage does not support platform `macOS`.\n</summary>\n\nBecause:\n* `package:flutter_msal_plus/flutter_msal_plus.dart` that declares support for platforms: `Android`, `iOS`.\n</details>\n\n<details>\n<summary>\nPackage does not support platform `Web`.\n</summary>\n\nBecause:\n* `package:flutter_msal_plus/flutter_msal_plus.dart` that declares support for platforms: `Android`, `iOS`.\n</details>\n\n\n**Swift PM-ready:** This iOS or macOS plugin supports the Swift Package Manager. See https://docs.flutter.dev/to/spm for details.\n\n\n**Built-in Kotlin-ready:** This Android plugin supports built-in Kotlin. See https://docs.flutter.dev/release/breaking-changes/migrate-to-built-in-kotlin/for-plugin-authors for details.\n"
+   },
+   {
+    "id": "analysis",
+    "title": "Pass static analysis",
+    "grantedPoints": 50,
+    "maxPoints": 50,
+    "status": "passed",
+    "summary": "### [*] 50/50 points: code has no errors, warnings, lints, or formatting issues\n"
+   },
+   {
+    "id": "dependency",
+    "title": "Support up-to-date dependencies",
+    "grantedPoints": 40,
+    "maxPoints": 40,
+    "status": "passed",
+    "summary": "### [*] 10/10 points: All of the package dependencies are supported in the latest version\n\nNo dependencies.\n\n<details><summary>Transitive dependencies</summary>\n\n|Package|Constraint|Compatible|Latest|Notes|\n|:-|:-|:-|:-|:-|\n|[`characters`]|-|1.4.1|1.4.1||\n|[`collection`]|-|1.19.1|1.19.1||\n|[`material_color_utilities`]|-|0.13.0|0.13.1||\n|[`meta`]|-|1.19.0|1.19.0||\n|[`vector_math`]|-|2.4.3|2.4.3||\n</details>\n\nTo reproduce run `dart pub outdated --no-dev-dependencies --up-to-date --no-dependency-overrides`.\n\n[`characters`]: https://pub.dev/packages/characters\n[`collection`]: https://pub.dev/packages/collection\n[`material_color_utilities`]: https://pub.dev/packages/material_color_utilities\n[`meta`]: https://pub.dev/packages/meta\n[`vector_math`]: https://pub.dev/packages/vector_math\n\n### [*] 10/10 points: Package supports latest stable Dart and Flutter SDKs\n\n### [*] 20/20 points: Compatible with dependency constraint lower bounds\n\n`pub downgrade` does not expose any static analysis error.\n"
+   }
+  ]
+ },
+ "screenshots": [],
+ "result": {
+  "repositoryUrl": "https://github.com/wikilift/msal-flutter",
+  "repositoryStatus": "failed",
+  "licenses": [
+   {
+    "spdxIdentifier": "BSD-3-Clause",
+    "operations": [
+     0,
+     54,
+     29,
+     "Copyright (c) <year> <owner>.",
+     1,
+     54,
+     533,
+     2,
+     588,
+     11,
+     0,
+     599,
+     20,
+     "the copyright holder",
+     1,
+     595,
+     919
+    ]
+   }
+  ],
+  "grantedPoints": 150,
+  "maxPoints": 160
+ },
+ "urlProblems": [],
+ "scores": {
+  "grantedPoints": 150,
+  "maxPoints": 160
+ }
+}
